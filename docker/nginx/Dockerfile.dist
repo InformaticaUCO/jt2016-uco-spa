@@ -19,6 +19,8 @@ RUN rm /etc/nginx/sites-enabled/default
 
 RUN echo "upstream php-upstream { server php:9001; }" > /etc/nginx/conf.d/upstream.conf
 
+RUN usermod -u USERID www-data
+
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
 

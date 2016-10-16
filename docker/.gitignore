@@ -1,3 +1,5 @@
 etc/parameters.yml
+nginx/Dockerfile
+php7-fpm/Dockerfile
 logs/
 !logs/.gitkeep

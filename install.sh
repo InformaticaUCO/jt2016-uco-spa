@@ -1,9 +1,21 @@
 #!/bin/bash
 
+function check {
+  $1 --version > /dev/null 2>&1 || { echo >&2 "Se requiere '$1' pero no ha sido encontrado. Instalación detenida."; exit 1; }
+}
 
-git --version > /dev/null 2>&1 || { echo >&2 "Se requiere 'git' pero no ha sido encontrado. Abortando..."; exit 1; }
-curl --version > /dev/null 2>&1 || { echo >&2 "Se requiere 'curl' pero no ha sido encontrado. Abortando..."; exit 1; }
-php --version > /dev/null 2>&1 || { echo >&2 "Se requiere 'php' pero no ha sido encontrado. Abortando..."; exit 1; }
+check git
+check curl
+check php
+check docker
+check docker-compose
+
+if [ ! -e docker/nginx/Dockerfile ];
+then
+  export USERID=$(id -u)
+  sed -e "s/USERID/$USERID/" docker/nginx/Dockerfile.dist > docker/nginx/Dockerfile
+  sed -e "s/USERID/$USERID/" docker/php7-fpm/Dockerfile.dist > docker/php7-fpm/Dockerfile
+fi
 
 if [ ! -d simplesamlphp ];
 then
@@ -31,6 +43,7 @@ if [ ! -e config/config.php ];
 then
   echo Creando certificados ...
   [ -d cert ] || mkdir cert
+  [ -d cache ] || mkdir cache
   openssl req -newkey rsa:2048 -new -x509 -days 3652 -nodes \
         -out cert/saml.crt -keyout cert/saml.pem \
         -subj "/C=ES/ST=Cordoba/L=Cordoba/O=Servicio de Informatica/OU=Soporte/CN=localhost" > /dev/null 2>&1
@@ -47,8 +60,12 @@ fi
 
 echo Creando máquinas ...
 docker-compose up -d
-echo 5 segundos...
-sleep 5
+
+until echo "status" | docker exec -i jt2016_uco_db mysql mysql --password=mysql > /dev/null 2>&1
+do
+  echo "Esperando a que la base de datos esté disponible..."
+  sleep 2
+done
 
 echo Configurando base de datos
 docker exec -i jt2016_uco_db mysqladmin --password=mysql create simplesamlphp > /dev/null 2>&1

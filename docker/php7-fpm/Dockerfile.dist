@@ -12,6 +12,8 @@ ADD symfony.pool.conf /etc/php/7.0/fpm/pool.d/
 RUN rm /etc/php/7.0/fpm/pool.d/www.conf
 RUN mkdir /run/php/
 
+RUN usermod -u USERID www-data
+
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
 
