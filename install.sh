@@ -48,6 +48,9 @@ then
         -out cert/saml.crt -keyout cert/saml.pem \
         -subj "/C=ES/ST=Cordoba/L=Cordoba/O=Servicio de Informatica/OU=Soporte/CN=localhost" > /dev/null 2>&1
 
+  openssl genrsa -passout pass:secret -out cert/oauth2_module.pem 2048
+  openssl rsa -in cert/oauth2_module.pem -passin pass:secret -pubout -out cert/oauth2_module.crt
+
   echo Copiando configuración...
   cp ../config/authsources.php config/
   cp ../config/config.php config/
