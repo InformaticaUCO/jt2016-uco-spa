@@ -17,6 +17,12 @@ then
   sed -e "s/USERID/$USERID/" docker/php7-fpm/Dockerfile.dist > docker/php7-fpm/Dockerfile
 fi
 
+if [ ! -d web ];
+then
+  echo Descomprimiendo aplicación...
+  tar zxvf web.tar.gz > /dev/null 2>&1
+fi
+
 if [ ! -d simplesamlphp ];
 then
   echo Clonando simplesamlphp...
@@ -74,4 +80,15 @@ echo Configurando base de datos
 docker exec -i jt2016_uco_db mysqladmin --password=mysql create simplesamlphp > /dev/null 2>&1
 echo "GRANT ALL PRIVILEGES ON simplesamlphp.* to 'root'@'%'" | docker exec -i jt2016_uco_db mysql mysql --password=mysql > /dev/null 2>&1
 docker exec -i jt2016_uco_php /var/simplesamlphp/vendor/bin/dbalschema > /dev/null 2>&1
+echo "INSERT INTO SimpleSAMLphp_oauth2_client VALUES ('_2895a35673b27949d3c5bf39e2830000899413d021','_a277861b11393d83c3bd4b40a01a6d25b158e08907','JT2016','Aplicacion de ejemplo','[\"http:\\/\\/localhost\\/app_dev.php\\/redirect\",\"http:\\/\\/localhost\\/app.php\\/redirect\",\"http:\\/\\/localhost\\/redirect\"]','[\"basic\"]');" | docker exec -i jt2016_uco_db mysql simplesamlphp --password=mysql > /dev/null 2>&1
+
+CONSOLE=/var/www/symfony/bin/console
+echo Configurando aplicación de symfony
+docker exec -i jt2016_uco_php $CONSOLE cache:clear > /dev/null 2>&1
+docker exec -i jt2016_uco_php $CONSOLE doctrine:database:create > /dev/null 2>&1
+docker exec -i jt2016_uco_php $CONSOLE doctrine:schema:create > /dev/null 2>&1
+docker exec -i jt2016_uco_php $CONSOLE jt2016:database:setup > /dev/null 2>&1
+docker exec -i jt2016_uco_php chown -R www-data. /var/www > /dev/null 2>&1
+
+
 
